@@ -4,8 +4,8 @@ hangmanImageContainer.style.background =
     '#cccccc url("/images/s0.gif") no-repeat right top';
 let errorContainer = document.querySelector(".error-container");
 let errorText = document.querySelector(".error-text");
-const numberWords = 100;
-const apiKey = "FCH3RI55";
+let statusMessage = document.querySelector(".status-message");
+let playAgain = document.querySelector(".play-again");
 
 class Hangman {
     constructor(word, guessedLetter = [], remainingGuesses = 8) {
@@ -18,10 +18,9 @@ class Hangman {
     }
 
     setStatus() {
-        let finished = this.word.every(letter =>
-            this.guessedLetter.includes(letter)
+        let finished = this.word.every(
+            letter => this.guessedLetter.includes(letter) || letter === " "
         );
-
         if (finished) {
             this.status = "finished";
         } else if (this.remainingGuesses !== 0) {
@@ -33,12 +32,13 @@ class Hangman {
 
     get statusMessage() {
         if (this.status === "finished") {
-            window.location.reload();
             return `Great! You guess the password!`;
         } else if (this.status === "playing") {
             return `Guess left : ${this.remainingGuesses}`;
         } else {
-            return `Ohh, you lose! The password was ${this.word.join("")}`;
+            return `Ohh, you lose! The password was: ${this.word
+                .join("")
+                .toUpperCase()}`;
         }
     }
 
@@ -69,7 +69,6 @@ class Hangman {
         if (includeLetter) {
             errorText.innerHTML = "Już wykorzystałeś tę literę!";
             errorContainer.style.display = "block";
-            throw new Error("Już wykorzystałeś tę literę!");
         } else if (!includeLetter && !isGoodGuess) {
             this.counterGuess++;
             hangmanImageContainer.style.background = `url("/images/s${this.counterGuess}.gif") no-repeat right top`;
@@ -80,20 +79,21 @@ class Hangman {
 }
 
 async function play() {
-    let words = await fetch(
-        `https://random-word-api.herokuapp.com/word?key=${apiKey}&number=${numberWords}`
-    )
+    let word = await fetch(`http://puzzle.mead.io/puzzle`)
         .then(res => res.json())
         .then(body => {
-            let wordsLength = body.length;
-            let index = Math.floor(Math.random() * wordsLength + 1);
-            const hangman1 = new Hangman(body[index]);
+            const { puzzle } = body;
+            const hangman1 = new Hangman(puzzle);
             hangman1.drawLines();
             const keyPress = function(e) {
                 hangman1.makeGuess(e.key);
                 hangman1.setStatus();
-                hangman1.statusMessage;
-                if (hangman1.remainingGuesses === 0) {
+                statusMessage.textContent = hangman1.statusMessage;
+                if (
+                    hangman1.remainingGuesses === 0 ||
+                    hangman1.status === "finished" ||
+                    hangman1.status === "lose"
+                ) {
                     window.removeEventListener("keydown", keyPress);
                 }
             };
@@ -101,7 +101,11 @@ async function play() {
             window.addEventListener("keydown", keyPress);
         })
         .catch(err => console.log(err));
-    return words;
+    return word;
 }
 
-play();
+playAgain.addEventListener("click", function() {
+    hangmanImageContainer.style.background = `url("/images/s0.gif") no-repeat right top`;
+    statusMessage.textContent = "";
+    play();
+});

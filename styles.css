@@ -2,7 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    background-color: #cccccc;
+    background-color: #ccc;
 }
 
 .container {
@@ -52,4 +52,22 @@
 #category-container {
     margin: 5rem 0;
     font-size: 20px;
+}
+
+.play-again {
+    padding: 10px 40px;
+    font-size: 20px;
+    margin-top: 20px;
+    border: none;
+    background-color: #000;
+    color: #fff;
+}
+
+.play-again:hover {
+    cursor: pointer;
+}
+
+.status-message {
+    font-size: 20px;
+    font-weight: bold;
 }
